@@ -12,11 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+##
+# Extension to InfluxDB module.
+#
 module InfluxDBExt
+  ##
+  # Line Protocol module.
+  #
   module LineProtocol
+    ##
+    # Line Protocol parser.
+    #
     class Parser
+
+      ##
+      # Parse the points from data.
+      #
       # If block is given, yields each point in data.
+      #
       # If block is not given, returns a list of points in data.
+      #
       def each_point data
         if block_given?
           yield nil
