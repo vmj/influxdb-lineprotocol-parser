@@ -1,3 +1,4 @@
+require 'rake/clean'
 require 'rake/testtask'
 require 'rdoc/task'
 
