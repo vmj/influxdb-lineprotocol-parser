@@ -31,4 +31,5 @@ EOF
   s.files = [
     'lib/influxdb/lineprotocol/parser.rb'
   ]
+  s.required_ruby_version = Gem::Requirement.new(">= 2.3".freeze)
 end
