@@ -40,9 +40,11 @@ module InfluxDBExt
       #
       # If block is not given, returns a list of points in data.
       #
+      # The data can be a String, or a single Integer or an Array of Integers.
+      # The Integers are assumed to be UTF-8 bytes.
+      #
       def each_point(data)
-        # TODO: support byte arrays (client does not have to ensure that only complete UTF-8 characters are passed)
-        buf = data.to_s.encode(UTF_8).bytes.freeze
+        buf = bytes(data)
         i = 0
         len = buf.size
 
@@ -139,6 +141,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -175,6 +178,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -211,6 +215,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -249,6 +254,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -282,6 +288,7 @@ module InfluxDBExt
           return len
         end
         c = buf[i]
+        raise "unsupported input type" unless c.is_a? Integer
         case c
         when LATIN_CAPITAL_LETTER_F, LATIN_CAPITAL_LETTER_T, LATIN_SMALL_LETTER_F, LATIN_SMALL_LETTER_T
           @state = :field_value_boolean
@@ -307,6 +314,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -364,6 +372,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -421,6 +430,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -449,7 +459,9 @@ module InfluxDBExt
 
       def field_value_string_end(buf, i, len)
         if i < len
-          case buf[i]
+          c = buf[i]
+          raise "unsupported input type" unless c.is_a? Integer
+          case c
           when COMMA
             @state = :field_key
             i + 1
@@ -477,6 +489,7 @@ module InfluxDBExt
             i += 1
           else
             c = buf[i]
+            raise "unsupported input type" unless c.is_a? Integer
             case c
             when BACKSLASH
               @escaped = true
@@ -527,6 +540,7 @@ module InfluxDBExt
       def line_end(buf, i, len)
         while i < len
           c = buf[i]
+          raise "unsupported input type" unless c.is_a? Integer
           if c == NEWLINE
             return i
           end
@@ -541,6 +555,7 @@ module InfluxDBExt
       def whitespace(buf, i, len)
         while i < len
           c = buf[i]
+          raise "unsupported input type" unless c.is_a? Integer
           if c != SPACE && c != TAB && c != NULL
             return [i, c]
           end
@@ -596,6 +611,19 @@ module InfluxDBExt
           end
         else
           raise "error: decode: invalid state"
+        end
+      end
+
+      def bytes(data)
+        case data
+        when nil
+          [].freeze
+        when Integer
+          [data].freeze
+        when String
+          data.encode(UTF_8).bytes.freeze
+        when Array
+          data
         end
       end
 

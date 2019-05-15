@@ -51,4 +51,23 @@ class InitialTest < Minitest::Test
       end
     end
   end
+
+  def test_initial_batch
+    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    assert_equal([EXPECTED], p.each_point(LINES.join('') + VALID_LINE))
+  end
+
+  def test_initial_bytes_incremental
+    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    LINES.join('').each_byte do |byte|
+      assert_equal([], p.each_point(byte))
+    end
+    VALID_LINE.each_byte do |byte|
+      if byte == 10
+        assert_equal([EXPECTED], p.each_point(byte))
+      else
+        assert_equal([], p.each_point(byte))
+      end
+    end
+  end
 end
