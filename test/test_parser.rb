@@ -16,6 +16,17 @@ require 'minitest/autorun'
 require 'influxdb/lineprotocol/parser'
 
 class ParserTest < Minitest::Test
+  def self.point(series, values, tags: nil, timestamp: nil)
+    p = {series: series.to_s.freeze, values: values.map {|k, v| [k.to_s.freeze, v.freeze]}.to_h.freeze}
+    unless tags.nil?
+      p[:tags] = tags.map {|k, v| [k.to_s.freeze, v.to_s.freeze]}.to_h.freeze
+    end
+    unless timestamp.nil?
+      p[:timestamp] = timestamp.freeze
+    end
+    p.freeze
+  end
+
   SOURCE = [
       "m f=1i\n",
       "m,t=a f=2i\n",
@@ -23,10 +34,10 @@ class ParserTest < Minitest::Test
       "m f=5i 123\n"
   ].join('').freeze
   EXPECTED = [
-      {series: "m".freeze, values: {"f".freeze => 1}.freeze}.freeze,
-      {series: "m".freeze, tags: {"t".freeze => "a".freeze}.freeze, values: {"f".freeze => 2}.freeze}.freeze,
-      {series: "m".freeze, tags: {"t1".freeze => "b".freeze, "t2".freeze => "c".freeze}.freeze, values: {"f1".freeze => 3, "f2".freeze => 4}.freeze}.freeze,
-      {series: "m".freeze, values: {"f".freeze => 5}.freeze, timestamp: 123}.freeze,
+      point(:m, {f: 1}),
+      point(:m, {f: 2}, tags: {t: :a}),
+      point(:m, {f1: 3, f2: 4}, tags: {t1: :b, t2: :c}),
+      point(:m, {f: 5}, timestamp: 123),
   ]
 
   def test_yield
