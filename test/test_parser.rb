@@ -16,19 +16,20 @@ require 'minitest/autorun'
 require 'influxdb/lineprotocol/parser'
 
 class ParserTest < Minitest::Test
+  SOURCE = "m f=1i\n".freeze
+  EXPECTED = {series: "m".freeze, values: {"f".freeze => 1}.freeze}.freeze
+
   def test_yield
     p = InfluxDBExt::LineProtocol::Parser.new
     actual = nil
-    expected = {series: "m".freeze, values: {"f".freeze => 1}}
-    p.each_point("m f=1i\n".freeze) { |parsed|
+    p.each_point(SOURCE) { |parsed|
       actual = parsed
     }
-    assert_equal expected, actual
+    assert_equal EXPECTED, actual
   end
 
   def test_return
     p = InfluxDBExt::LineProtocol::Parser.new
-    expected = {series: "m".freeze, values: {"f".freeze => 1}}
-    assert_equal [expected], p.each_point("m f=1i\n".freeze)
+    assert_equal [EXPECTED], p.each_point(SOURCE)
   end
 end

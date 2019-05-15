@@ -82,14 +82,14 @@ module InfluxDBExt
       BACKSLASH = 92
       COMMA = 44
       EQUALS = 61
-      HASH = 23
+      HASH = 35
       NEWLINE = 10
       NULL = 0
       SPACE = 32
       TAB = 9
 
       # Start (and end) marker of a string field value (not special anywhere else)
-      QUOTATION_MARK = 22
+      QUOTATION_MARK = 34
 
       # Start markers of a numeric field value (not special anywhere else)
       PLUS_SIGN = 43
@@ -117,7 +117,7 @@ module InfluxDBExt
         when COMMA
           @log.error "initial: missing measurement"
           @state = :invalid
-          invalid(buf, i, len)
+          i + 1
         when HASH # comment
           @state = :comment
           i + 1
@@ -144,16 +144,15 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when COMMA # start of tag set.
-              @point = {series: decode(buf[start..i-1]), tags: {}}
+              @point = {series: decode(buf, start, i-1), tags: {}}
               @state = :tag_key
               return i+1
             when NEWLINE
               @log.error("measurement: missing fields")
-              # no need to go via :invalid; already at newline
-              enter_initial
-              return i+1
+              @state = :invalid
+              return i
             when SPACE # start of field set
-              @point = {series: decode(buf[start..i-1]), values: {}}
+              @point = {series: decode(buf, start, i-1), values: {}}
               @state = :field_key
               i, _ = whitespace(buf, i + 1, len)
               return i
@@ -181,18 +180,18 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when EQUALS
-              @key = decode(buf[start..i-1])
+              @key = decode(buf, start, i-1)
               if @key == ""
                 @log.error("tag_key: empty key")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @state = :tag_value
               return i+1
             when NEWLINE
               @log.error("tag key: newline")
-              enter_initial
-              return i+1
+              @state = :invalid
+              return i
             else
               i += 1
             end
@@ -217,16 +216,16 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when COMMA
-              @point[:tags][@key] = decode(buf[start..i-1])
+              @point[:tags][@key] = decode(buf, start, i-1)
               @key = nil
               @state = :tag_key
               return i+1
             when NEWLINE
               @log.error("tag value: newline")
-              enter_initial
-              return i+1
+              @state = :invalid
+              return i
             when SPACE
-              @point[:tags][@key] = decode(buf[start..i-1])
+              @point[:tags][@key] = decode(buf, start, i-1)
               @key = nil
               @state = :field_key
               i, _ = whitespace(buf, i + 1, len)
@@ -255,18 +254,18 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when EQUALS
-              @key = decode(buf[start..i-1])
+              @key = decode(buf, start, i-1)
               if @key == ""
                 @log.error("field key: empty key")
                 @state = :invalid
-                return invalid(buf, i + 1, len)
+                return i
               end
               @state = :field_value
               return i+1
             when NEWLINE
               @log.error("field key: newline")
-              enter_initial
-              return i+1
+              @state = :invalid
+              return i
             else
               i += 1
             end
@@ -296,7 +295,7 @@ module InfluxDBExt
         else
           @log.error("field value: invalid")
           @state = :invalid
-          invalid(buf, i, len)
+          i
         end
       end
 
@@ -313,18 +312,18 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when COMMA
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value boolean: invalid boolean")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:values][@key] = value
               @key = nil
               @state = :field_key
               return i+1
             when NEWLINE
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value boolean: invalid boolean")
                 enter_initial
@@ -335,11 +334,11 @@ module InfluxDBExt
               @state = :complete
               return i+1
             when SPACE
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value boolean: invalid boolean")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:values][@key] = value
               @key = nil
@@ -370,29 +369,29 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when COMMA
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value numeric: invalid number")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:values][@key] = value
               @key = nil
               @state = :field_key
               return i+1
             when NEWLINE
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value numeric: invalid number")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:values][@key] = value
               @key = nil
               @state = :complete
               return i+1
             when SPACE
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value numeric: invalid number")
                 @state = :invalid
@@ -427,11 +426,11 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when QUOTATION_MARK
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value string: invalid string")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:values][@key] = value
               @key = nil
@@ -463,7 +462,7 @@ module InfluxDBExt
             i
           else
             @state = :invalid
-            invalid(buf, i, len)
+            i
           end
         else
           len
@@ -483,11 +482,11 @@ module InfluxDBExt
               @escaped = true
               i += 1
             when NEWLINE
-              value = decode(buf[start..i-1])
+              value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("timestamp: invalid timestamp")
                 @state = :invalid
-                return invalid(buf, i, len)
+                return i
               end
               @point[:timestamp] = value
               @key = nil
@@ -508,6 +507,7 @@ module InfluxDBExt
         i = line_end(buf, i, len)
         if i < len
           enter_initial
+          i += 1
         end
         i
       end
@@ -516,18 +516,18 @@ module InfluxDBExt
         i = line_end(buf, i, len)
         if i < len
           enter_initial
+          i += 1
         end
         i
       end
 
       # Starting from position i,
-      # returns the index of the byte that follows next newline.
-      # Returns len if no such byte is found or it is at the end of buf.
+      # returns the index of the newline.
+      # Returns len if no such byte is found.
       def line_end(buf, i, len)
         while i < len
           c = buf[i]
           if c == NEWLINE
-            i += 1
             return i
           end
           i += 1
@@ -549,8 +549,12 @@ module InfluxDBExt
         [len, nil]
       end
 
-      def decode(buf)
-        str = @buf.nil? ? string(buf) : string(@buf + buf)
+      def decode(buf, start, i)
+        str = if @buf.nil?
+                (start <= i) ? string(buf[start..i]) : ""
+              else
+                (start <= i) ? string(@buf + buf[start..i]) : string(@buf)
+              end
         @buf = nil
         case @state
         when :measurement
