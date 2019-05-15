@@ -18,15 +18,17 @@ require 'influxdb/lineprotocol/parser'
 class ParserTest < Minitest::Test
   def test_yield
     p = InfluxDBExt::LineProtocol::Parser.new
-    ok = false
-    p.each_point("") { |point|
-      ok = true
+    actual = nil
+    expected = {series: "m".freeze, values: {"f".freeze => 1}}
+    p.each_point("m f=1i\n".freeze) { |parsed|
+      actual = parsed
     }
-    assert_equal true, ok
+    assert_equal expected, actual
   end
 
   def test_return
     p = InfluxDBExt::LineProtocol::Parser.new
-    assert_equal [], p.each_point("")
+    expected = {series: "m".freeze, values: {"f".freeze => 1}}
+    assert_equal [expected], p.each_point("m f=1i\n".freeze)
   end
 end
