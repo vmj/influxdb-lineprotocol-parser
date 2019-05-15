@@ -20,7 +20,7 @@ class ParserTest < Minitest::Test
   EXPECTED = {series: "m".freeze, values: {"f".freeze => 1}.freeze}.freeze
 
   def test_yield
-    p = InfluxDBExt::LineProtocol::Parser.new
+    p = InfluxDB::LineProtocol::Parser.new
     actual = nil
     p.each_point(SOURCE) { |parsed|
       actual = parsed
@@ -29,7 +29,7 @@ class ParserTest < Minitest::Test
   end
 
   def test_return
-    p = InfluxDBExt::LineProtocol::Parser.new
+    p = InfluxDB::LineProtocol::Parser.new
     assert_equal [EXPECTED], p.each_point(SOURCE)
   end
 end

@@ -17,7 +17,7 @@ require 'logger'
 ##
 # Extension to InfluxDB module.
 #
-module InfluxDBExt
+module InfluxDB
   ##
   # Line Protocol module.
   #

@@ -29,7 +29,7 @@ class InitialTest < Minitest::Test
   EXPECTED = {series: "cpu".freeze, values: {"a".freeze => 1}.freeze}.freeze
 
   def test_initial
-    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.each do |line|
       assert_equal([], p.each_point(line))
     end
@@ -37,7 +37,7 @@ class InitialTest < Minitest::Test
   end
 
   def test_initial_incremental
-    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.each do |line|
       line.each_char do |single_char_string|
         assert_equal([], p.each_point(single_char_string))
@@ -53,12 +53,12 @@ class InitialTest < Minitest::Test
   end
 
   def test_initial_batch
-    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     assert_equal([EXPECTED], p.each_point(LINES.join('') + VALID_LINE))
   end
 
   def test_initial_bytes_incremental
-    p = InfluxDBExt::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.join('').each_byte do |byte|
       assert_equal([], p.each_point(byte))
     end
