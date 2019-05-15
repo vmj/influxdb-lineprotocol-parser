@@ -147,7 +147,7 @@ module InfluxDB
               @escaped = true
               i += 1
             when COMMA # start of tag set.
-              @point = {series: decode(buf, start, i-1), tags: {}}
+              @point = {series: decode(buf, start, i-1), tags: {}, values: {}}
               @state = :tag_key
               return i+1
             when NEWLINE
