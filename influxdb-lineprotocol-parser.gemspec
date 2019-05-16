@@ -15,8 +15,8 @@
 Gem::Specification.new do |s|
   s.summary = 'InfluxDB line protocol parser'
   s.name = 'influxdb-lineprotocol-parser'
-  s.version = '0.0.2'
-  s.date = '2019-05-15'
+  s.version = '0.0.3'
+  s.date = '2019-05-16'
   s.homepage = 'https://rubygems.org/gems/influxdb-lineprotocol-parser'
   s.metadata = {
     'bug_tracker_uri' => 'https://github.com/vmj/influxdb-lineprotocol-parser/issues',
