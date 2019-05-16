@@ -27,9 +27,15 @@ module InfluxDB
     # Line Protocol parser.
     #
     class Parser
-      def initialize(logger: nil, log_level: :warn)
+      def initialize(logger: nil, log_level: :warn, escapes: nil)
         @log = logger || ::Logger.new(STDERR)
         @log.level = log_level
+        case escapes
+        when :compat
+          @unescapes = InfluxDB::LineProtocol::CompatUnescapes.new
+        else
+          @unescapes = InfluxDB::LineProtocol::Unescapes.new
+        end
         enter_initial
       end
 
@@ -573,7 +579,7 @@ module InfluxDB
         @buf = nil
         case @state
         when :measurement
-          str
+          @unescapes.unescape(:measurement, str)
         when :tag_key
           str
         when :tag_value
@@ -629,6 +635,32 @@ module InfluxDB
 
       def string(buf)
         buf.pack(UTF_8_PACK_FORMAT).force_encoding(UTF_8)
+      end
+    end # Parser
+
+    class CompatUnescapes
+      def unescape(field, value)
+        case field
+        when :measurement
+          value.gsub(/\\([, ])/, '\\1')
+          # escaped comma anywhere
+          # escaped space anywhere
+        end
+      end
+    end
+
+    class Unescapes
+      def unescape(field, value)
+        case field
+        when :measurement
+          # 1. escaped hash, null, or tab at the beginning
+          # 2. escaped comma, space, or newline anywhere
+          # 3. escaped backslash at the end
+          value
+              .sub(/^\\([#\0\t])/, '\\1')
+              .gsub(/\\([, \n])/, '\\1')
+              .sub(/\\\\$/, '\\')
+        end
       end
     end
   end
