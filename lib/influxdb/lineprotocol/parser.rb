@@ -581,9 +581,9 @@ module InfluxDB
         when :measurement
           @unescapes.unescape(:measurement, str)
         when :tag_key
-          str
+          @unescapes.unescape(:tag_key, str)
         when :tag_value
-          str
+          @unescapes.unescape(:tag_value, str)
         when :field_key
           str
         when :field_value_boolean
@@ -639,26 +639,34 @@ module InfluxDB
     end # Parser
 
     class CompatUnescapes
-      def unescape(field, value)
+      def unescape(field, str)
         case field
         when :measurement
-          value.gsub(/\\([, ])/, '\\1')
-          # escaped comma anywhere
-          # escaped space anywhere
+          # escaped comma or space anywhere
+          str.gsub(/\\([, ])/, '\\1')
+        when :tag_key, :tag_value
+          # escaped comma, equals, or space anywhere
+          str.gsub(/\\([,= ])/, '\\1')
         end
       end
     end
 
     class Unescapes
-      def unescape(field, value)
+      def unescape(field, str)
         case field
         when :measurement
           # 1. escaped hash, null, or tab at the beginning
           # 2. escaped comma, space, or newline anywhere
           # 3. escaped backslash at the end
-          value
+          str
               .sub(/^\\([#\0\t])/, '\\1')
               .gsub(/\\([, \n])/, '\\1')
+              .sub(/\\\\$/, '\\')
+        when :tag_key, :tag_value
+          # 1. escaped comma, equals, newline, or space anywhere
+          # 2. escaped backslash at the end
+          str
+              .gsub(/\\([,=\n ])/, '\\1')
               .sub(/\\\\$/, '\\')
         end
       end

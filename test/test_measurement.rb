@@ -15,10 +15,12 @@
 require 'minitest/autorun'
 require 'influxdb/lineprotocol/parser'
 
-# incompatibilities:
+# incompatibilities not fixed by compat mode:
 #  * backslash at the end (measurement 3): InfluxDB can't parse that
 #  * backslash at the end (measurement 4): InfluxDB parses that but tags become part of the measurement name
-#  * comma (measurements 5-8): I should unescape
+# incompatibilities fixed by compat mode:
+#  * hash, null, or tab at the beginning (measurements 13, 21, and 29): InfluxDB takes the escaping backslash literally
+#  * embedded newlines (measurements 17-20): InfluxDB takes the escaping backslashes literally
 class MeasurementTest < Minitest::Test
   def self.test(name, src, default, compat)
     src = (src + "\n").freeze
