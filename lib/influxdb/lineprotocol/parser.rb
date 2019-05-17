@@ -162,9 +162,8 @@ module InfluxDB
               return i
             when SPACE # start of field set
               @point = {series: decode(buf, start, i-1), values: {}}
-              @state = :field_key
-              i, _ = whitespace(buf, i + 1, len)
-              return i
+              @state = :whitespace1
+              return i + 1
             else # part of measurement
               i += 1
             end
@@ -250,6 +249,21 @@ module InfluxDB
           @buf.nil? ? @buf = buf[start..i-1] : @buf += buf[start..i-1]
         end
         i
+      end
+
+      def whitespace1(buf, i, len)
+        i, c = whitespace(buf, i, len)
+        case c
+        when nil
+          len
+        when NEWLINE
+          @log.error("whitespace1: missing fields")
+          @state = :invalid
+          i
+        else
+          @state = :field_key
+          i
+        end
       end
 
       def field_key(buf, i, len)
