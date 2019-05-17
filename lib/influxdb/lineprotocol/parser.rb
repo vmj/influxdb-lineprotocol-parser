@@ -373,8 +373,7 @@ module InfluxDB
               end
               @point[:values][@key] = value
               @key = nil
-              @state = :timestamp
-              i, _ = whitespace(buf, i + 1, len)
+              @state = :whitespace2
               return i
             else
               i += 1
@@ -431,8 +430,7 @@ module InfluxDB
               end
               @point[:values][@key] = value
               @key = nil
-              @state = :timestamp
-              i, _ = whitespace(buf, i + 1, len)
+              @state = :whitespace2
               return i
             else
               i += 1
@@ -492,8 +490,7 @@ module InfluxDB
             @state = :complete
             i + 1
           when SPACE
-            @state = :timestamp
-            i, _ = whitespace(buf, i, len)
+            @state = :whitespace2
             i
           else
             @state = :invalid
@@ -501,6 +498,21 @@ module InfluxDB
           end
         else
           len
+        end
+      end
+
+      def whitespace2(buf, i, len)
+        i, c = whitespace(buf, i, len)
+        case c
+        when nil
+          len
+        when NEWLINE
+          @log.error("whitespace2: missing timestamp")
+          @state = :invalid
+          i
+        else
+          @state = :timestamp
+          i
         end
       end
 
