@@ -624,7 +624,7 @@ module InfluxDB
             nil
           end
         when :field_value_string
-          str
+          @unescapes.unescape(:string, str)
         when :timestamp
           case str
           when /^-?[0-9]+$/
@@ -664,6 +664,9 @@ module InfluxDB
         when :tag_key, :tag_value, :field_key
           # escaped comma, equals, or space anywhere
           str.gsub(/\\([,= ])/, '\\1')
+        when :string
+          # escaped quote anywhere
+          str.gsub(/\\"/, '"')
         end
       end
     end
@@ -693,6 +696,9 @@ module InfluxDB
               .sub(/^\\([\0\t])/, '\\1')
               .gsub(/\\([,=\n ])/, '\\1')
               .sub(/\\\\$/, '\\')
+        when :string
+          # escaped quote anywhere
+          str.gsub(/\\"/, '"')
         end
       end
     end
