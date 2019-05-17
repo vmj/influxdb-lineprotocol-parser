@@ -599,7 +599,7 @@ module InfluxDB
         when :tag_value
           @unescapes.unescape(:tag_value, str)
         when :field_key
-          str
+          @unescapes.unescape(:field_key, str)
         when :field_value_boolean
           case str
           when 't', 'T', 'true', 'True'
@@ -658,7 +658,7 @@ module InfluxDB
         when :measurement
           # escaped comma or space anywhere
           str.gsub(/\\([, ])/, '\\1')
-        when :tag_key, :tag_value
+        when :tag_key, :tag_value, :field_key
           # escaped comma, equals, or space anywhere
           str.gsub(/\\([,= ])/, '\\1')
         end
@@ -680,6 +680,14 @@ module InfluxDB
           # 1. escaped comma, equals, newline, or space anywhere
           # 2. escaped backslash at the end
           str
+              .gsub(/\\([,=\n ])/, '\\1')
+              .sub(/\\\\$/, '\\')
+        when :field_key
+          # 1. escaped null or tab at beginning
+          # 2. escaped comma, equals, newline, or space anywhere
+          # 3. escaped backslash at the end
+          str
+              .sub(/^\\([\0\t])/, '\\1')
               .gsub(/\\([,=\n ])/, '\\1')
               .sub(/\\\\$/, '\\')
         end

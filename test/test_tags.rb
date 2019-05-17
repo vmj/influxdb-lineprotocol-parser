@@ -17,7 +17,8 @@ require 'influxdb/lineprotocol/parser'
 
 # incompatibilities not fixed by compat mode:
 #  * backslash at the end of tag key (backslash 3): InfluxDB can't parse that
-#  * backslash at the end of tag value (measurement 4): InfluxDB can't parse that, either
+#  * backslash at the end of tag value (backslash 3): InfluxDB can't parse that, either
+# incompatibilities fixed by additional escaping:
 #  * unescaped comma in tag key (comma 1-3): InfluxDB can't parse that, but escaping them works
 #  * unescaped equals in tag value (equals 1-3): Strangely InfluxDB handles the first one but no the rest, but escaping them works
 #  * unescaped space in tag key (space 1-3): InfluxDB can't parse that, but escaping them works
