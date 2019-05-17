@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 Gem::Specification.new do |s|
-  s.summary = 'InfluxDB line protocol parser'
+  s.summary = 'InfluxDB Line Protocol parser'
   s.name = 'influxdb-lineprotocol-parser'
-  s.version = '0.0.3'
-  s.date = '2019-05-16'
+  s.version = '0.0.4'
+  s.date = '2019-05-18'
   s.homepage = 'https://rubygems.org/gems/influxdb-lineprotocol-parser'
   s.metadata = {
     'bug_tracker_uri' => 'https://github.com/vmj/influxdb-lineprotocol-parser/issues',
@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.email = 'mikko@varri.fi'
   s.license = 'Apache-2.0'
   s.description = <<-EOF
-Streaming parser for InfluxDB line protocol.
+Incremental (a.k.a streaming) parser for InfluxDB Line Protocol.
 EOF
   s.files = [
     'lib/influxdb/lineprotocol/parser.rb'
