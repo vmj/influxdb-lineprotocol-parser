@@ -537,7 +537,6 @@ module InfluxDB
                 return i
               end
               @point[:timestamp] = value
-              @key = nil
               @state = :complete
               return i + 1
             else

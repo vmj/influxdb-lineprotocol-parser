@@ -31,13 +31,15 @@ class ParserTest < Minitest::Test
       "m f=1i\n",
       "m,t=a f=2i\n",
       "m,t1=b,t2=c f1=3i,f2=4i\n",
-      "m f=5i 123\n"
+      "m f=5i 123\n",
+      "🌡,📌=🏡 📋=\"🔥\" -123\n"
   ].join('').freeze
   EXPECTED = [
       point(:m, {f: 1}),
       point(:m, {f: 2}, tags: {t: :a}),
       point(:m, {f1: 3, f2: 4}, tags: {t1: :b, t2: :c}),
       point(:m, {f: 5}, timestamp: 123),
+      point("🌡", {"📋" => "🔥"}, tags: {"📌" => "🏡"}, timestamp: -123),
   ]
 
   def test_yield
