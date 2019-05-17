@@ -615,7 +615,7 @@ module InfluxDB
           end
         when :field_value_numeric
           case str
-          when /^[+-]?[0-9]*\.[0-9]*([eE][+-]?[0-9]+)?$/
+          when /^[-+]?([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?$/
             str.to_f
           when /^[+-]?[0-9]+[ui]$/
             str.to_i
