@@ -14,6 +14,7 @@
 # limitations under the License.
 require 'minitest/autorun'
 require 'influxdb/lineprotocol/parser'
+require 'logger'
 
 class Whitespace0Test < Minitest::Test
   LINES = [
@@ -28,8 +29,11 @@ class Whitespace0Test < Minitest::Test
   VALID_LINE = "cpu a=1i\n".freeze
   EXPECTED = {series: "cpu".freeze, values: {"a".freeze => 1}.freeze}.freeze
 
+  LOGGER = ::Logger.new(STDERR)
+  LOGGER.level = :fatal
+
   def test_whitespace0
-    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(logger: LOGGER)
     LINES.each do |line|
       assert_equal([], p.each_point(line))
     end
@@ -37,7 +41,7 @@ class Whitespace0Test < Minitest::Test
   end
 
   def test_whitespace0_incremental
-    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(logger: LOGGER)
     LINES.each do |line|
       line.each_char do |single_char_string|
         assert_equal([], p.each_point(single_char_string))
@@ -53,12 +57,12 @@ class Whitespace0Test < Minitest::Test
   end
 
   def test_whitespace0_batch
-    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(logger: LOGGER)
     assert_equal([EXPECTED], p.each_point(LINES.join('') + VALID_LINE))
   end
 
   def test_whitespace0_bytes
-    p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
+    p = InfluxDB::LineProtocol::Parser.new(logger: LOGGER)
     LINES.join('').each_byte do |byte|
       assert_equal([], p.each_point(byte))
     end

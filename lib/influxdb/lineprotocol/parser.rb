@@ -27,9 +27,13 @@ module InfluxDB
     # Line Protocol parser.
     #
     class Parser
-      def initialize(logger: nil, log_level: :warn, escapes: nil)
-        @log = logger || ::Logger.new(STDERR)
-        @log.level = log_level
+      def initialize(logger: nil, escapes: nil)
+        if logger
+          @log = logger
+        else
+          @log = ::Logger.new(STDERR)
+          @log.level = :warn
+        end
         case escapes
         when :compat
           @unescapes = InfluxDB::LineProtocol::CompatUnescapes.new
@@ -133,7 +137,6 @@ module InfluxDB
           i + 1
         else
           # don't advance i because the byte belongs to measurement
-          @log.info "whitespace0: start measurement at offset #{i}"
           @state = :measurement
           i
         end
