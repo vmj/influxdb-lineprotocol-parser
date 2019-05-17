@@ -15,7 +15,7 @@
 require 'minitest/autorun'
 require 'influxdb/lineprotocol/parser'
 
-class InitialTest < Minitest::Test
+class Whitespace0Test < Minitest::Test
   LINES = [
       "# This comment line is ignored. 👍\n",
       "   \n",
@@ -28,7 +28,7 @@ class InitialTest < Minitest::Test
   VALID_LINE = "cpu a=1i\n".freeze
   EXPECTED = {series: "cpu".freeze, values: {"a".freeze => 1}.freeze}.freeze
 
-  def test_initial
+  def test_whitespace0
     p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.each do |line|
       assert_equal([], p.each_point(line))
@@ -36,7 +36,7 @@ class InitialTest < Minitest::Test
     assert_equal [EXPECTED], p.each_point(VALID_LINE)
   end
 
-  def test_initial_incremental
+  def test_whitespace0_incremental
     p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.each do |line|
       line.each_char do |single_char_string|
@@ -52,12 +52,12 @@ class InitialTest < Minitest::Test
     end
   end
 
-  def test_initial_batch
+  def test_whitespace0_batch
     p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     assert_equal([EXPECTED], p.each_point(LINES.join('') + VALID_LINE))
   end
 
-  def test_initial_bytes_incremental
+  def test_whitespace0_bytes
     p = InfluxDB::LineProtocol::Parser.new(log_level: :fatal)
     LINES.join('').each_byte do |byte|
       assert_equal([], p.each_point(byte))

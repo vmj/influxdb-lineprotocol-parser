@@ -36,7 +36,7 @@ module InfluxDB
         else
           @unescapes = InfluxDB::LineProtocol::Unescapes.new
         end
-        enter_initial
+        enter_whitespace0
       end
 
       ##
@@ -64,7 +64,7 @@ module InfluxDB
             else
               points << @point
             end
-            enter_initial
+            enter_whitespace0
           end
         end
 
@@ -73,9 +73,9 @@ module InfluxDB
 
       private
 
-      def enter_initial
+      def enter_whitespace0
         @point = nil
-        @state = :initial
+        @state = :whitespace0
         @escaped = false
         @buf = nil
         @key = nil
@@ -114,7 +114,7 @@ module InfluxDB
 
 
 
-      def initial(buf, i, len)
+      def whitespace0(buf, i, len)
         # whitespace consumes TAB, SPACE, and NULL.
         # This method consumes NEWLINE, HASH, and COMMA.
         # BACKSLASH and EQUAL (of the special bytes) are valid measurement starts; they are not consumed.
@@ -123,7 +123,7 @@ module InfluxDB
         when nil # just whitespace
           len
         when COMMA
-          @log.error "initial: missing measurement"
+          @log.error "whitespace0: missing measurement"
           @state = :invalid
           i + 1
         when HASH # comment
@@ -133,7 +133,7 @@ module InfluxDB
           i + 1
         else
           # don't advance i because the byte belongs to measurement
-          @log.info "initial: start measurement at offset #{i}"
+          @log.info "whitespace0: start measurement at offset #{i}"
           @state = :measurement
           i
         end
@@ -354,7 +354,7 @@ module InfluxDB
               value = decode(buf, start, i-1)
               if value.nil?
                 @log.error("field value boolean: invalid boolean")
-                enter_initial
+                enter_whitespace0
                 return i + 1
               end
               @point[:values][@key] = value
@@ -539,7 +539,7 @@ module InfluxDB
       def comment(buf, i, len)
         i = line_end(buf, i, len)
         if i < len
-          enter_initial
+          enter_whitespace0
           i += 1
         end
         i
@@ -548,7 +548,7 @@ module InfluxDB
       def invalid(buf, i, len)
         i = line_end(buf, i, len)
         if i < len
-          enter_initial
+          enter_whitespace0
           i += 1
         end
         i
